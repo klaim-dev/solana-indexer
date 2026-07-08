@@ -1,0 +1,21 @@
+# Rust / Anchor
+target/
+.anchor/
+test-ledger/
+**/*.rs.bk
+
+# Node / frontend
+node_modules/
+.next/
+dist/
+
+# secrets & env - NEVER commit
+.env
+.env.*
+!.env.example
+id.json
+*-keypair.json
+*.json.key
+
+# OS
+.DS_Store
