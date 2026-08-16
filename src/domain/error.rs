@@ -1,6 +1,6 @@
 use axum::{http::StatusCode, response::IntoResponse};
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, thiserror::Error, PartialEq)]
 pub enum AppError {
     #[error{"not found"}]
     NotFound,
