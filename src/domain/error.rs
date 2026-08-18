@@ -8,6 +8,8 @@ pub enum AppError {
     BadRequest(String),
     #[error{"{0}"}]
     Internal(String),
+    #[error{"unauthorized"}]
+    Unauthorized,
 }
 
 impl IntoResponse for AppError {
@@ -16,12 +18,14 @@ impl IntoResponse for AppError {
             AppError::NotFound => StatusCode::NOT_FOUND,
             AppError::BadRequest(..) => StatusCode::BAD_REQUEST,
             AppError::Internal(..) => StatusCode::INTERNAL_SERVER_ERROR,
+            AppError::Unauthorized => StatusCode::UNAUTHORIZED,
         };
 
         let message = match self {
             AppError::NotFound => "not found".to_string(),
             AppError::BadRequest(message) => message,
             AppError::Internal(_) => "internal error".to_string(),
+            AppError::Unauthorized => "unauthorized".to_string(),
         };
 
         (status_code, message).into_response()
