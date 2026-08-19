@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 axum = "0.8.9"
+dotenvy = "0.15.7"
 solana-pubkey = "2.0"
 thiserror = "=2.0.19"
 tokio = { version = "1.53.1", features = ["full"] }

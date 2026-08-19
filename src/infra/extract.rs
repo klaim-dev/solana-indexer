@@ -31,16 +31,25 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     use axum::{
         body::Body,
         http::{HeaderValue, Request, StatusCode},
     };
     use tower::ServiceExt;
 
-    use crate::app;
+    use crate::{AppState, Config, app};
 
     const VALID_PUBKEY: &str = "6HTpFxctmd8qm5a5gxjHztsnfKyMJQxmafLCgzpLfzes";
     const INVALID_PUBKEY: &str = "6HTpFxctmd8qm5a5gxjHztsnfKyMJQxmafLCgzpLfze0";
+
+    fn test_state() -> AppState {
+        let config = Config::from_source(|_| Some("http://test-rpc".to_string())).unwrap();
+        AppState {
+            config: Arc::new(config),
+        }
+    }
 
     #[tokio::test]
     async fn get_account_accepts_api_key_and_valid_pubkey() {
@@ -50,7 +59,7 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        let response = app().oneshot(request).await.unwrap();
+        let response = app(test_state()).oneshot(request).await.unwrap();
 
         assert_eq!(response.status(), StatusCode::OK);
     }
@@ -62,7 +71,7 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        let response = app().oneshot(request).await.unwrap();
+        let response = app(test_state()).oneshot(request).await.unwrap();
 
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
     }
@@ -76,7 +85,7 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        let response = app().oneshot(request).await.unwrap();
+        let response = app(test_state()).oneshot(request).await.unwrap();
 
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
@@ -89,7 +98,7 @@ mod tests {
             .body(Body::empty())
             .unwrap();
 
-        let response = app().oneshot(request).await.unwrap();
+        let response = app(test_state()).oneshot(request).await.unwrap();
 
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }

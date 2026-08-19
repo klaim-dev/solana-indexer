@@ -1,13 +1,16 @@
-use std::str::FromStr;
+use std::{str::FromStr, sync::Arc};
 
 use axum::{Router, extract::Path, routing::get};
 use solana_pubkey::Pubkey;
+use tokio::net::TcpListener;
 
 use crate::{
+    config::{Config, ConfigError},
     domain::error::AppError::{self},
     infra::extract::ApiKey,
 };
 
+mod config;
 mod domain;
 mod infra;
 
@@ -33,17 +36,50 @@ fn parse_pubkey(input: &str) -> Result<Pubkey, AppError> {
     Pubkey::from_str(input).map_err(|_| AppError::BadRequest("invalid pubkey".to_string()))
 }
 
-pub fn app() -> Router {
+pub fn app(state: AppState) -> Router {
     Router::new()
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
         .route("/status", get(status))
         .route("/accounts/{pubkey}", get(get_account))
+        .with_state(state)
+}
+
+#[derive(Debug, Clone)]
+pub struct AppState {
+    #[expect(dead_code, reason = "reserved for RPC-backed handlers")]
+    config: Arc<Config>,
+}
+
+impl AppState {
+    fn new(config: Config) -> AppState {
+        AppState {
+            config: Arc::new(config),
+        }
+    }
+}
+#[derive(Debug, thiserror::Error)]
+pub enum StartupError {
+    #[error("config error: {0}")]
+    Config(#[from] ConfigError),
+    #[error("io error {0}")]
+    Io(#[from] std::io::Error),
 }
 
 #[tokio::main]
-async fn main() {
-    let _app = app();
+async fn main() -> Result<(), StartupError> {
+    let _ = dotenvy::dotenv();
+    run().await?;
+    Ok(())
+}
+
+async fn run() -> Result<(), StartupError> {
+    let config = Config::from_env()?;
+    let state = AppState::new(config);
+    let app = app(state);
+    let listener = TcpListener::bind("127.0.0.1:8000").await?;
+    axum::serve(listener, app).await?;
+    Ok(())
 }
 
 #[cfg(test)]
