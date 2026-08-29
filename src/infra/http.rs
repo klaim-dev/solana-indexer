@@ -39,14 +39,12 @@ impl IntoResponse for AppError {
             AppError::BadRequest(..) => StatusCode::BAD_REQUEST,
             AppError::Internal(..) => StatusCode::INTERNAL_SERVER_ERROR,
             AppError::Unauthorized => StatusCode::UNAUTHORIZED,
+            AppError::InvalidAccountPubkey { .. } => StatusCode::BAD_REQUEST,
+            AppError::AccountAlreadyExists { .. } => StatusCode::BAD_REQUEST,
+            AppError::AccountNotExist { .. } => StatusCode::BAD_REQUEST,
         };
 
-        let message = match self {
-            AppError::NotFound => "not found".to_string(),
-            AppError::BadRequest(message) => message,
-            AppError::Internal(_) => "internal error".to_string(),
-            AppError::Unauthorized => "unauthorized".to_string(),
-        };
+        let message = self.to_string();
 
         (status_code, message).into_response()
     }

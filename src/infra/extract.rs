@@ -31,7 +31,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
 
     use axum::{
         body::Body,
@@ -46,9 +45,7 @@ mod tests {
 
     fn test_state() -> AppState {
         let config = Config::from_source(|_| Some("http://test-rpc".to_string())).unwrap();
-        AppState {
-            config: Arc::new(config),
-        }
+        AppState::new(config)
     }
 
     #[tokio::test]
